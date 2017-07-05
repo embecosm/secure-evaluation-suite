@@ -27,6 +27,32 @@ Of course it would be nicer to be able to do:
 	
 	array[bit(i,j)];
 	
-but bit should return just an integer in order not to generate errors, a proper integer that could
-lead to the correct bit (so probably > 10, would it cause warnings?)
+but bit() should return just an integer in order not to generate errors, a proper integer that 
+could lead to the correct bit (so probably > 10, would it cause warnings?)
 Would bit() benefit from being a builtin function?
+
+Tables may be a security issue due to cache-based timing attacks, but the idea of implementing
+a boolean function equivalent to the usage of such function may be tricky because according to
+the introduction of:
+
+https://eprint.iacr.org/2011/332.pdf
+
+there are a lot of possible functions to implement a single output bit of an average table
+with 8 bits in input, and it would be hard to make the program find the optimal function
+automatically.
+We can let the programmer implement his own boolean function, so that he can choose the best
+option among the best heuristic results on the cutting hedge of these virtual circuit 
+implementations of tables.
+
+Some other countermeasures may benefit from bitslicing (other than implementing the tables
+as boolean circuits) such as inserting redundant bits in order to check the integrity of data
+against fault attacks:
+
+https://eprint.iacr.org/2016/850.pdf
+
+
+First of all we should implement a bitslicer that does the minimal transformations required
+to implement such countermeasures, then we might add the automatizations of some of those
+countermeasures.
+
+
