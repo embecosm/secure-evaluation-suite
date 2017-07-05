@@ -1,0 +1,32 @@
+The bitslicer pass should help programmers to implement techniques that benefit from a bitsliced
+representation of data.
+
+The programmer should be able to choose any cutting-hedge countermeasure to make its new 
+implementation more secure.
+The bitslicer must be available just to support the programmer in the implementation by doing 
+the 'dirty work' of splitting the variables and managing the slices, and of course provide the
+programmer with an interface, a tool to access the single bits in order to implement such 
+countermeasures.
+
+e.g.: to access the bit j of the element i of array[8]:
+
+unsigned char __bitslice__ array[10];
+
+	for(i=0; i<10; i++){
+		for(j=0; j<8; j++){
+			...
+			array + bit(i,j);
+			...
+		}
+	}
+	
+and the function bit(i,j) might be a function that returns the actuall address of the requested
+bit.
+
+Of course it would be nicer to be able to do:
+	
+	array[bit(i,j)];
+	
+but bit should return just an integer in order not to generate errors, a proper integer that could
+lead to the correct bit (so probably > 10, would it cause warnings?)
+Would bit() benefit from being a builtin function?
