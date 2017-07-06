@@ -1,0 +1,81 @@
+https://github.com/ARMmbed/mbedtls/commit/e73a77f6568366ae0ff29b35f15aa27e04d56cbd
+
+that if makes the function return prematurely depending on the fact that a 0 was found in 
+the padding (buf) or not and the previous while stops when a zero is found.
+Information about padding mustn't be disclosed.
+Both dependancies have in common the presence of a variable (p) related to sensible data (buf).
+
+An annotation on the sensible data (buf), if properly propagated would give us a warning.
+
+Then the programmer would consider whether these threas are real or not and how to face them.
+
+ --> p = buf;
+  
+     switch( ctx->padding )
+     {
+         case RSA_PKCS_V15:
+ 
+    ----->   if( *p++ != 0 )	---> WARNING!! Sensible data used in a flow-control point
+-                return( POLARSSL_ERR_RSA_INVALID_PADDING );             
+             
+             bt = *p++;
+
+             if( ( bt != RSA_CRYPT && mode == RSA_PRIVATE ) ||
+                 ( bt != RSA_SIGN && mode == RSA_PUBLIC ) )
+             {
+-                return( POLARSSL_ERR_RSA_INVALID_PADDING );
+             }
+ 
+
+            if( bt == RSA_CRYPT )
+             {
+         ----->  while( *p != 0 && p < buf + ilen - 1 )		---> WARNING!! Sensible data used in a flow-control point
+-                    p++;
+ 
+-        ----->  if( *p != 0 || p >= buf + ilen - 1 )		---> WARNING!! Sensible data used in a flow-control point
+-                    return( POLARSSL_ERR_RSA_INVALID_PADDING );
+
+             }
+  
+  
+  
+
+     p = buf;
+ 
+ 
+     switch( ctx->padding )
+     {
+         case RSA_PKCS_V15:
+ 
+ 
+             if( *p++ != 0 )
++                correct = 0;
+             
+             
+             bt = *p++;
+             if( ( bt != RSA_CRYPT && mode == RSA_PRIVATE ) ||
+                 ( bt != RSA_SIGN && mode == RSA_PUBLIC ) )
+             {
++                correct = 0;
+             }
+ 
+
+            if( bt == RSA_CRYPT )
+             {
+                 while( *p != 0 && p < buf + ilen - 1 )
++                    pad_count += ( *p++ != 0 );
+ 
++                correct &= ( *p == 0 && p < buf + ilen - 1 );
++
++                q = p;
+ 
++                // Also pass over all other bytes to reduce timing differences
++                //
++                while ( q < buf + ilen - 1 )
++                    pad_count += ( *q++ != 0 );
++
++                // Prevent compiler optimization of pad_count
++                //
++                correct |= pad_count & 0x100000; /* Always 0 unless 1M bit keys */
+                 p++;
+             }

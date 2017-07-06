@@ -1,0 +1,59 @@
+ https://github.com/wolfSSL/wolfssl/commit/6ef9e79ff5ccd2b96fdfed404ada872fd29514be
+ 
+ next release notes including these threats:
+ https://github.com/wolfSSL/wolfssl/commit/6895803f2b1387f69c75a95c6b823b68dabd35d8
+ 
+ 
+ 
+ 
+ An example of a very subtle weakness:
+ buf contains the sensible data (the exponent used in a mathematical multiplication used to encrypt)
+ y contains one bit from buf (one bit of the exponent)
+ R[2] contains 2 numbers used in various steps of the mathematical algorithm.
+ 
+ Accessing a memory location through a value depending on sensible data introduces a theorical
+ side channel (buf -> y -> R[y])
+ If we annotate such sensible data, with a proper propagation of the related metadata we may
+ obtain some warnings in such situation:
+ 
+ annotate---> buf = sensible_data;
+ propagate--> y = (int)(buf >> (DIGIT_BIT - 1)) & 1;
+ 
+ propagate--> fp_mul(&R[0], &R[1], &R[y^1]); --->WARNING!! Sensible data related variable used in a memory access
+ propagate--> fp_sqr(&R[y], &R[y]); ------------>WARNING!! Sensible data related variable used in a memory access
+ 
+ We than let the programmer decide whether the detected issue is a real problem or not
+ and how to solve it.
+ 
+ /* grab the next msb from the exponent */
+     y     = (int)(buf >> (DIGIT_BIT - 1)) & 1;
+     buf <<= (fp_digit)1;
+ 
+ 
+     /* do ops */
+     fp_mul(&R[0], &R[1], &R[y^1]); fp_montgomery_reduce(&R[y^1], P, mp);
+-    fp_sqr(&R[y], &R[y]);          fp_montgomery_reduce(&R[y], P, mp);
+
+
+
+
+/* grab the next msb from the exponent */
+     y     = (int)(buf >> (DIGIT_BIT - 1)) & 1;
+     buf <<= (fp_digit)1;
+ 
+ 
+     /* do ops */
+     fp_mul(&R[0], &R[1], &R[y^1]); fp_montgomery_reduce(&R[y^1], P, mp);
++
++    /* instead of using R[y] for sqr, which leaks key bit to cache monitor,
++     * use R[2] as temp, make sure address calc is constant, keep
++     * &R[0] and &R[1] in cache */
++    fp_copy((fp_int*) ( ((wolfssl_word)&R[0] & off_on_addr[(y^1)]) +
++                        ((wolfssl_word)&R[1] & off_on_addr[y]) ),
++            &R[2]);
++    fp_sqr(&R[2], &R[2]);          fp_montgomery_reduce(&R[2], P, mp);
++    fp_copy(&R[2],
++            (fp_int*) ( ((wolfssl_word)&R[0] & off_on_addr[(y^1)]) +
++                        ((wolfssl_word)&R[1] & off_on_addr[y]) ) );
+   }
+   }

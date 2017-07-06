@@ -1,0 +1,61 @@
+Explanation of the weakness:
+
+https://github.com/torproject/tor/commit/d48cebc5e498b0ae673635f40fc57cdddab45d5b
+
+commit with fix:
+
+https://github.com/torproject/tor/commit/308f6dad20675c42b29862f4269ad1fbfb00dc9a
+
+both tmp and rand_bw determine the duration of the loop that iterates over the relay-list in
+a function that is supposed to select a relay at the end of the iteration.
+rand_bw is a random number created starting from the bandwidth value of the current relay.
+tmp is increased by the weighted bandwidths of the elements in the list, the relays to choose from.
+The sensible information in this case regarded the status and the choice of the relays.
+In order to be sure to keep them safe some metadata could be applied to the data structures that keep 
+record of such information and spread
+
+
+   for (i=0; i < (unsigned)smartlist_len(sl); i++) {
+     is_exit = bitarray_is_set(exit_bits, i);
+     is_guard = bitarray_is_set(guard_bits, i);
+ 
+     /* Weights can be 0 if not counting guards/exits */
+     if (is_exit && is_guard)
+       tmp += ((uint64_t)(bandwidths[i] * exit_weight * guard_weight));
+     else if (is_guard)
+       tmp += ((uint64_t)(bandwidths[i] * guard_weight));
+     else if (is_exit)
+       tmp += ((uint64_t)(bandwidths[i] * exit_weight));
+     else
+       tmp += bandwidths[i];
+ 
+---> if (tmp >= rand_bw)			
+--->   break;
+	}
+
+
+   i_chosen = (unsigned)smartlist_len(sl);
+   i_has_been_chosen = 0;
+   
+   
+   for (i=0; i < (unsigned)smartlist_len(sl); i++) {
+     is_exit = bitarray_is_set(exit_bits, i);
+     is_guard = bitarray_is_set(guard_bits, i);
+ 
+     /* Weights can be 0 if not counting guards/exits */
+     if (is_exit && is_guard)
+       tmp += ((uint64_t)(bandwidths[i] * exit_weight * guard_weight));
+     else if (is_guard)
+       tmp += ((uint64_t)(bandwidths[i] * guard_weight));
+     else if (is_exit)
+       tmp += ((uint64_t)(bandwidths[i] * exit_weight));
+     else
+       tmp += bandwidths[i];
+ 
++    if (tmp >= rand_bw && !i_has_been_chosen) {
++      i_chosen = i;
++      i_has_been_chosen = 1;
++    }
+	
+	}
+	
