@@ -56,3 +56,13 @@ to implement such countermeasures, then we might add the automatizations of some
 countermeasures.
 
 
+Would it be useful to introduce a way to neutralize a warning targeting a particular line?
+Just in case the programmer decides that the detected potential weakness is not a real
+weakness.
+Maybe something that can be applied to the code itself? In order to let the programmer
+keep locality, but not addressing the whole line, that might contain other weaknesses reported
+by other warnings.
+Maybe a way to identify and address a particular warning? such as a reference number or similar
+that can be used in the file or on the command line.
+
+
