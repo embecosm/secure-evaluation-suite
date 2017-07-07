@@ -1,0 +1,22 @@
+https://github.com/randombit/botan/commit/3fb31cef450cef82015170f8e825a2d656163ea6
+
+botan 1.1.33
+
+The flow control condition involves sensible data. According to the content of the first byte
+of the input the instructions included in the if statement are executed or not.
+
+-->	    if(in[0] == 0)
+	       {
+	        in += 1;
+	        in_length -= 1;
+	       }
+ 
+    secure_vector<byte> input(in, in + in_length);
+
+
+
+
+---->   byte skip_first = CT::is_zero<byte>(in[0]) & 0x01;
+    
+   		secure_vector<byte> input(in + skip_first, in + in_length);
+
