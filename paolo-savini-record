@@ -66,3 +66,15 @@ Maybe a way to identify and address a particular warning? such as a reference nu
 that can be used in the file or on the command line.
 
 
+The bitslicer should:
+1) Hide the bitliced data and the bitslicing work to the programmer.
+	- for each 'store' instruction the value is bitsliced
+	- for each 'load' instruction the value is recomposed
+
+This way also interactions with data that are not supposed to be bitsliced are permitted, without the need
+to bitslice them too and the related operations.
+
+2) Provide the programmer with an interface, a tool, that can go through the 'bitslicing' wall
+and access individual bits. The bit(i,j) intrinsic.
+
+
