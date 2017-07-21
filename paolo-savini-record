@@ -77,4 +77,32 @@ to bitslice them too and the related operations.
 2) Provide the programmer with an interface, a tool, that can go through the 'bitslicing' wall
 and access individual bits. The bit(i,j) intrinsic.
 
+The __builtin_iX_bit() intrinsics:
+
+	uint8_t *__builtin_i8_bit(uint8_t v, int index);
+
+it takes the value from which we want to extract the bit at position 'index' and returns a slice
+containing the requested bit.
+PROBLEM: clang (and llvm as well) requires that we specify the types of the arguments, so, if
+we want to let the user implement its algorithm by storing the sensible data in units longer than
+8 bits we should provide these intrinsics as well:
+
+	uint16_t *__builtin_i16_bit(uint16_t v, int index);
+	uint32_t *__builtin_i32_bit(uint32_t v, int index);
+	uint64_t *__builtin_i64_bit(uint64_t v, int index);
+	. . .
+
+An other problem consists in the fact that I can't find a clean way in /llvm/include/llvm/IR/Intrinsics.td
+to obtain some freedom for the dimension of the integer type for the second argument 'index'.
+I can only select from: llvm_i8_ty, llvm_i16_ty, llvm_i32_ty, llvm_i64_ty. Does llvm_i32_ty adapt to the int
+dimension on a target machine??
+Does the programmer really need to declare the pointer for the bit as a int32_t?
+I tried to insert indexes of different dimensions: it works, the compiler just adds truncations or extensions.
+So, should I put a i64 type for the index? Isn't i32 enough?
+
+2^32 / 2 (signed) = 2,147,483,648
+
+I guess that no one uses elements of arrays with 2 miliards of bits: REMEMBER that 'index' iterates on the
+bits of one element, so it needs to reach at most 64 (or 128?).
+So, ok, i32 is good.
 
