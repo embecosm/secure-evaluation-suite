@@ -106,3 +106,27 @@ I guess that no one uses elements of arrays with 2 miliards of bits: REMEMBER th
 bits of one element, so it needs to reach at most 64 (or 128?).
 So, ok, i32 is good.
 
+
+slice access
+It would be nice to access the bit i of each of the slices processed in parallel in one shot.
+A lot of applications require it.
+A __builtin_slice() may work (it may also be a variant of the __builtin_i8_bit in which we put proper inputs to
+obtain the whole slice i instead of an individual bit).
+What should it return? Also for the __builtin_i8_bit case, pointer or value? In the high level grammar
+an assignment doesn't use a pointer:
+
+ a = 5;	yes
+&a = 5;	no		(but verify!)
+
+so I'd be free to do what I need with my pass.
+Since with the slices I'd likely have to deal with arrays (if we use more than 8 blocks in parallel)
+and since I'd like to treat a slice as a single variable I should do what is required on all the bits
+i of the blocks (the slice i) and leave the original instruction with the last byte of the slice as operand.
+Possible? If so we may do things like:
+
+for(i=0;i<8;i++){					  =>  for(i=0;i<64;i++){
+	ptext[i] = ptext[i] ^ Mkey[i+16]; =>	  __buitlin_slice(ptext, i) = __builtin_slice(ptext, i) ^ __builtin_bit(Mkey, i);
+}									  =>  }
+
+
+
